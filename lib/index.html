@@ -28,7 +28,7 @@
             const pagDiv = document.getElementById('pagination');
             
             list.innerHTML = filtered.slice((page-1)*perPage, page*perPage).map(i => 
-                `<a href="${i.url}" download class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition text-gray-700 truncate block text-center font-medium">${i.name}</a>`
+                `<a href="${i.url}" class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition text-gray-700 truncate block text-center font-medium">${i.name}</a>`
             ).join('');
             
             const pages = Math.ceil(filtered.length/perPage);
