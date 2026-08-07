@@ -1,46 +1,132 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capas para Posts</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Catálogo de Arquivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 2rem 1rem; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; }
+        header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        header p { color: var(--text-muted); font-size: 0.9rem; }
+        .catalog-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .search-wrapper { position: relative; margin-bottom: 1.5rem; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .file-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; min-height: 200px; }
+        .file-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; transition: all 0.2s; }
+        .file-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-1px); }
+        .file-link { color: var(--text-main); text-decoration: none; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; width: 100%; word-break: break-all; }
+        .file-link i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+        .pagination { display: flex; justify-content: center; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: background 0.2s; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .no-results { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        <div class="mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Capas para Posts</h1>
-            <input type="text" id="search" onkeyup="filter()" placeholder="Pesquise pelo código do jogo..." class="w-full p-4 rounded-2xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-lg">
+<body>
+<div class="container">
+    <header>
+        <h1>Catálogo de Arquivos</h1>
+        <p>Lista de arquivos disponíveis para acesso</p>
+    </header>
+    <div class="catalog-box">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivo por nome..." oninput="filtrarEExibir()">
         </div>
-        
-        <div id="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        
-        <div id="pagination" class="mt-10 flex flex-wrap justify-center gap-2"></div>
+        <ul id="fileList" class="file-list"></ul>
+        <div id="pagination" class="pagination"></div>
     </div>
+</div>
+<script>
+const todosArquivos = [{"fullName":"BOBS_020.25.png","displayName":"BOBS_020.25","displayFileUrl":"https://assets.workinstore.org/posts/BOBS_020.25.png","downloadAttr":"download"},{"fullName":"BOMB_000.00.png","displayName":"BOMB_000.00","displayFileUrl":"https://assets.workinstore.org/posts/BOMB_000.00.png","downloadAttr":"download"},{"fullName":"BPGE_001.26.jpg","displayName":"BPGE_001.26","displayFileUrl":"https://assets.workinstore.org/posts/BPGE_001.26.jpg","downloadAttr":"download"},{"fullName":"BPMI_004.26.png","displayName":"BPMI_004.26","displayFileUrl":"https://assets.workinstore.org/posts/BPMI_004.26.png","downloadAttr":"download"},{"fullName":"BPMW_005.25.png","displayName":"BPMW_005.25","displayFileUrl":"https://assets.workinstore.org/posts/BPMW_005.25.png","downloadAttr":"download"},{"fullName":"BPMW_006.25.png","displayName":"BPMW_006.25","displayFileUrl":"https://assets.workinstore.org/posts/BPMW_006.25.png","downloadAttr":"download"},{"fullName":"BPMW_007.25.png","displayName":"BPMW_007.25","displayFileUrl":"https://assets.workinstore.org/posts/BPMW_007.25.png","downloadAttr":"download"},{"fullName":"DONK_000.01.png","displayName":"DONK_000.01","displayFileUrl":"https://assets.workinstore.org/posts/DONK_000.01.png","downloadAttr":"download"},{"fullName":"MARI_000.00.png","displayName":"MARI_000.00","displayFileUrl":"https://assets.workinstore.org/posts/MARI_000.00.png","downloadAttr":"download"},{"fullName":"MARI_000.64.png","displayName":"MARI_000.64","displayFileUrl":"https://assets.workinstore.org/posts/MARI_000.64.png","downloadAttr":"download"},{"fullName":"MOON_019.90.png","displayName":"MOON_019.90","displayFileUrl":"https://assets.workinstore.org/posts/MOON_019.90.png","downloadAttr":"download"},{"fullName":"PEBR_001.26.png","displayName":"PEBR_001.26","displayFileUrl":"https://assets.workinstore.org/posts/PEBR_001.26.png","downloadAttr":"download"},{"fullName":"PEBR_004.26.png","displayName":"PEBR_004.26","displayFileUrl":"https://assets.workinstore.org/posts/PEBR_004.26.png","downloadAttr":"download"},{"fullName":"PEBR_402.26.png","displayName":"PEBR_402.26","displayFileUrl":"https://assets.workinstore.org/posts/PEBR_402.26.png","downloadAttr":"download"},{"fullName":"PESL_000.00.jpg","displayName":"PESL_000.00","displayFileUrl":"https://assets.workinstore.org/posts/PESL_000.00.jpg","downloadAttr":"download"},{"fullName":"PGEN_000.00.png","displayName":"PGEN_000.00","displayFileUrl":"https://assets.workinstore.org/posts/PGEN_000.00.png","downloadAttr":"download"},{"fullName":"PGSN020.25.png","displayName":"PGSN020.25","displayFileUrl":"https://assets.workinstore.org/posts/PGSN020.25.png","downloadAttr":"download"},{"fullName":"SCUS_973.99.jpg","displayName":"SCUS_973.99","displayFileUrl":"https://assets.workinstore.org/posts/SCUS_973.99.jpg","downloadAttr":"download"},{"fullName":"SCUS_974.81.jpg","displayName":"SCUS_974.81","displayFileUrl":"https://assets.workinstore.org/posts/SCUS_974.81.jpg","downloadAttr":"download"},{"fullName":"SLES_018.16.jpg","displayName":"SLES_018.16","displayFileUrl":"https://assets.workinstore.org/posts/SLES_018.16.jpg","downloadAttr":"download"},{"fullName":"SLES_036.85.png","displayName":"SLES_036.85","displayFileUrl":"https://assets.workinstore.org/posts/SLES_036.85.png","downloadAttr":"download"},{"fullName":"SLES_037.35.png","displayName":"SLES_037.35","displayFileUrl":"https://assets.workinstore.org/posts/SLES_037.35.png","downloadAttr":"download"},{"fullName":"SLES_537.02.jpg","displayName":"SLES_537.02","displayFileUrl":"https://assets.workinstore.org/posts/SLES_537.02.jpg","downloadAttr":"download"},{"fullName":"SLPS_009.49.png","displayName":"SLPS_009.49","displayFileUrl":"https://assets.workinstore.org/posts/SLPS_009.49.png","downloadAttr":"download"},{"fullName":"SLUS_000.00.png","displayName":"SLUS_000.00","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_000.00.png","downloadAttr":"download"},{"fullName":"SLUS_004.93.png","displayName":"SLUS_004.93","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_004.93.png","downloadAttr":"download"},{"fullName":"SLUS_008.32.jpg","displayName":"SLUS_008.32","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_008.32.jpg","downloadAttr":"download"},{"fullName":"SLUS_011.61-013.18.png","displayName":"SLUS_011.61-013.18","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_011.61-013.18.png","downloadAttr":"download"},{"fullName":"SLUS_200.32.jpg","displayName":"SLUS_200.32","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_200.32.jpg","downloadAttr":"download"},{"fullName":"SLUS_209.09.jpg","displayName":"SLUS_209.09","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_209.09.jpg","downloadAttr":"download"},{"fullName":"SLUS_212.69.jpg","displayName":"SLUS_212.69","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_212.69.jpg","downloadAttr":"download"},{"fullName":"SLUS_219.78.png","displayName":"SLUS_219.78","displayFileUrl":"https://assets.workinstore.org/posts/SLUS_219.78.png","downloadAttr":"download"},{"fullName":"SNES_020.25.png","displayName":"SNES_020.25","displayFileUrl":"https://assets.workinstore.org/posts/SNES_020.25.png","downloadAttr":"download"},{"fullName":"WORK_002.26.png","displayName":"WORK_002.26","displayFileUrl":"https://assets.workinstore.org/posts/WORK_002.26.png","downloadAttr":"download"},{"fullName":"WORK_003.26.png","displayName":"WORK_003.26","displayFileUrl":"https://assets.workinstore.org/posts/WORK_003.26.png","downloadAttr":"download"},{"fullName":"WORK_004.26.png","displayName":"WORK_004.26","displayFileUrl":"https://assets.workinstore.org/posts/WORK_004.26.png","downloadAttr":"download"},{"fullName":"WORK_009.25.png","displayName":"WORK_009.25","displayFileUrl":"https://assets.workinstore.org/posts/WORK_009.25.png","downloadAttr":"download"},{"fullName":"WORK_011.25.png","displayName":"WORK_011.25","displayFileUrl":"https://assets.workinstore.org/posts/WORK_011.25.png","downloadAttr":"download"},{"fullName":"work_010.25.png","displayName":"work_010.25","displayFileUrl":"https://assets.workinstore.org/posts/work_010.25.png","downloadAttr":"download"}];
+const itensPorPagina = 30;
+let paginaAtual = 1;
+let arquivosFiltrados = [...todosArquivos];
 
-    <script>
-        const data = [{"name":"BOBS_020.25","url":"https://assets.workinstore.org/posts/BOBS_020.25.png"},{"name":"BOMB_000.00","url":"https://assets.workinstore.org/posts/BOMB_000.00.png"},{"name":"BPGE_001.26","url":"https://assets.workinstore.org/posts/BPGE_001.26.jpg"},{"name":"BPMI_004.26","url":"https://assets.workinstore.org/posts/BPMI_004.26.png"},{"name":"BPMW_005.25","url":"https://assets.workinstore.org/posts/BPMW_005.25.png"},{"name":"BPMW_006.25","url":"https://assets.workinstore.org/posts/BPMW_006.25.png"},{"name":"BPMW_007.25","url":"https://assets.workinstore.org/posts/BPMW_007.25.png"},{"name":"DONK_000.01","url":"https://assets.workinstore.org/posts/DONK_000.01.png"},{"name":"MARI_000.00","url":"https://assets.workinstore.org/posts/MARI_000.00.png"},{"name":"MARI_000.64","url":"https://assets.workinstore.org/posts/MARI_000.64.png"},{"name":"MOON_019.90","url":"https://assets.workinstore.org/posts/MOON_019.90.png"},{"name":"PEBR_001.26","url":"https://assets.workinstore.org/posts/PEBR_001.26.png"},{"name":"PEBR_004.26","url":"https://assets.workinstore.org/posts/PEBR_004.26.png"},{"name":"PEBR_402.26","url":"https://assets.workinstore.org/posts/PEBR_402.26.png"},{"name":"PESL_000.00","url":"https://assets.workinstore.org/posts/PESL_000.00.jpg"},{"name":"PGEN_000.00","url":"https://assets.workinstore.org/posts/PGEN_000.00.png"},{"name":"PGSN020.25","url":"https://assets.workinstore.org/posts/PGSN020.25.png"},{"name":"SCUS_973.99","url":"https://assets.workinstore.org/posts/SCUS_973.99.jpg"},{"name":"SCUS_974.81","url":"https://assets.workinstore.org/posts/SCUS_974.81.jpg"},{"name":"SLES_018.16","url":"https://assets.workinstore.org/posts/SLES_018.16.jpg"},{"name":"SLES_036.85","url":"https://assets.workinstore.org/posts/SLES_036.85.png"},{"name":"SLES_037.35","url":"https://assets.workinstore.org/posts/SLES_037.35.png"},{"name":"SLES_537.02","url":"https://assets.workinstore.org/posts/SLES_537.02.jpg"},{"name":"SLPS_009.49","url":"https://assets.workinstore.org/posts/SLPS_009.49.png"},{"name":"SLUS_000.00","url":"https://assets.workinstore.org/posts/SLUS_000.00.png"},{"name":"SLUS_004.93","url":"https://assets.workinstore.org/posts/SLUS_004.93.png"},{"name":"SLUS_008.32","url":"https://assets.workinstore.org/posts/SLUS_008.32.jpg"},{"name":"SLUS_011.61-013.18","url":"https://assets.workinstore.org/posts/SLUS_011.61-013.18.png"},{"name":"SLUS_200.32","url":"https://assets.workinstore.org/posts/SLUS_200.32.jpg"},{"name":"SLUS_209.09","url":"https://assets.workinstore.org/posts/SLUS_209.09.jpg"},{"name":"SLUS_212.69","url":"https://assets.workinstore.org/posts/SLUS_212.69.jpg"},{"name":"SLUS_219.78","url":"https://assets.workinstore.org/posts/SLUS_219.78.png"},{"name":"SNES_020.25","url":"https://assets.workinstore.org/posts/SNES_020.25.png"},{"name":"WORK_002.26","url":"https://assets.workinstore.org/posts/WORK_002.26.png"},{"name":"WORK_003.26","url":"https://assets.workinstore.org/posts/WORK_003.26.png"},{"name":"WORK_004.26","url":"https://assets.workinstore.org/posts/WORK_004.26.png"},{"name":"WORK_009.25","url":"https://assets.workinstore.org/posts/WORK_009.25.png"},{"name":"work_010.25","url":"https://assets.workinstore.org/posts/work_010.25.png"},{"name":"WORK_011.25","url":"https://assets.workinstore.org/posts/WORK_011.25.png"}];
-        let page = 1; const perPage = 30;
-        
-        function render(filtered = data) {
-            const list = document.getElementById('list');
-            const pagDiv = document.getElementById('pagination');
-            
-            list.innerHTML = filtered.slice((page-1)*perPage, page*perPage).map(i => 
-                `<a href="${i.url}" download class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition text-gray-700 truncate block text-center font-medium">${i.name}</a>`
-            ).join('');
-            
-            const pages = Math.ceil(filtered.length/perPage);
-            pagDiv.innerHTML = Array.from({length: pages}, (_, i) => 
-                `<button onclick="page=${i+1}; render()" class="px-5 py-2 ${page === i+1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'} border rounded-lg shadow-sm font-semibold">${i+1}</button>`
-            ).join('');
-        }
-        
-        function filter() {
-            const q = document.getElementById('search').value.toLowerCase();
-            page = 1; render(data.filter(i => i.name.toLowerCase().includes(q)));
-        }
-        render();
-    </script>
+function renderizar() {
+    const lista = document.getElementById('fileList');
+    const paginacaoDiv = document.getElementById('pagination');
+    lista.innerHTML = '';
+
+    if (arquivosFiltrados.length === 0) {
+        lista.innerHTML = '<div class="no-results"><i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Nenhum arquivo encontrado.</div>';
+        paginacaoDiv.innerHTML = '';
+        return;
+    }
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const itensPagina = arquivosFiltrados.slice(inicio, fim);
+
+    itensPagina.forEach(arq => {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = `<a href="${arq.displayFileUrl}" ${arq.downloadAttr ? 'download="' + arq.fullName + '"' : 'target="_blank"'} class="file-link" title="${arq.displayName}">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>${arq.displayName}</span>
+        </a>`;
+        lista.appendChild(li);
+    });
+
+    renderizarPaginacao();
+}
+
+function renderizarPaginacao() {
+    const paginacaoDiv = document.getElementById('pagination');
+    paginacaoDiv.innerHTML = '';
+    const totalPaginas = Math.ceil(arquivosFiltrados.length / itensPorPagina);
+
+    if (totalPaginas <= 1) return;
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.className = 'page-btn';
+    btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    btnAnterior.disabled = paginaAtual === 1;
+    btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
+    paginacaoDiv.appendChild(btnAnterior);
+
+    for (let i = 1; i <= totalPaginas; i++) {
+        const btn = document.createElement('button');
+        btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
+        btn.innerText = i;
+        btn.onclick = () => { paginaAtual = i; renderizar(); };
+        paginacaoDiv.appendChild(btn);
+    }
+
+    const btnProximo = document.createElement('button');
+    btnProximo.className = 'page-btn';
+    btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    btnProximo.disabled = paginaAtual === totalPaginas;
+    btnProximo.onclick = () => { if (paginaAtual < totalPaginas) { paginaAtual++; renderizar(); } };
+    paginacaoDiv.appendChild(btnProximo);
+}
+
+function filtrarEExibir() {
+    const termo = document.getElementById('searchInput').value.toLowerCase();
+    arquivosFiltrਣdos = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    paginaAtual = 1;
+    renderizar();
+}
+
+renderizar();
+</script>
 </body>
 </html>
