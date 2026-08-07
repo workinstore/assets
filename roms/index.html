@@ -1,47 +1,173 @@
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arquivos de ROM</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Catálogo de ROMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 2rem 1rem; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; }
+        header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        header p { color: var(--text-muted); font-size: 0.9rem; }
+        .catalog-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .search-wrapper { position: relative; margin-bottom: 1.5rem; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .file-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; min-height: 200px; }
+        .file-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; transition: all 0.2s; }
+        .file-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-1px); }
+        .file-link { color: var(--text-main); text-decoration: none; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; width: 100%; word-break: break-all; }
+        .file-link i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+        .pagination { display: flex; justify-content: center; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: background 0.2s; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-ellipsis { padding: 0.4rem 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+        .no-results { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        <div class="mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Pesquise o código da ROM</h1>
-            <input type="text" id="search" onkeyup="filter()" placeholder="Buscar arquivos..." class="w-full p-4 rounded-2xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-lg">
+<body>
+<div class="container">
+    <header>
+        <h1>Catálogo de ROMS</h1>
+        <p>Lista de ROMS disponíveis para acesso</p>
+    </header>
+    <div class="catalog-box">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivo por código da ROM..." oninput="filtrarEExibir()">
         </div>
-        
-        <div id="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        
-        <div id="pagination" class="mt-10 flex flex-wrap justify-center gap-2"></div>
+        <ul id="fileList" class="file-list"></ul>
+        <div id="pagination" class="pagination"></div>
     </div>
+</div>
+<script>
+const todosArquivos = [{"fullName":"AKEC.smd","displayName":"AKEC","displayFileUrl":"https://assets.workinstore.org/roms/AKEC.smd","downloadAttr":"download"},{"fullName":"ALA.smd","displayName":"ALA","displayFileUrl":"https://assets.workinstore.org/roms/ALA.smd","downloadAttr":"download"},{"fullName":"ASSM.smd","displayName":"ASSM","displayFileUrl":"https://assets.workinstore.org/roms/ASSM.smd","downloadAttr":"download"},{"fullName":"BOB.sfc","displayName":"BOB","displayFileUrl":"https://assets.workinstore.org/roms/BOB.sfc","downloadAttr":"download"},{"fullName":"BOMB.sfc","displayName":"BOMB","displayFileUrl":"https://assets.workinstore.org/roms/BOMB.sfc","downloadAttr":"download"},{"fullName":"DBAA.gba","displayName":"DBAA","displayFileUrl":"https://assets.workinstore.org/roms/DBAA.gba","downloadAttr":"download"},{"fullName":"DONK1.sfc","displayName":"DONK1","displayFileUrl":"https://assets.workinstore.org/roms/DONK1.sfc","downloadAttr":"download"},{"fullName":"MJM.smd","displayName":"MJM","displayFileUrl":"https://assets.workinstore.org/roms/MJM.smd","downloadAttr":"download"},{"fullName":"MLSS.gba","displayName":"MLSS","displayFileUrl":"https://assets.workinstore.org/roms/MLSS.gba","downloadAttr":"download"},{"fullName":"MMPR.sfc","displayName":"MMPR","displayFileUrl":"https://assets.workinstore.org/roms/MMPR.sfc","downloadAttr":"download"},{"fullName":"MMPRM.sfc","displayName":"MMPRM","displayFileUrl":"https://assets.workinstore.org/roms/MMPRM.sfc","downloadAttr":"download"},{"fullName":"MSA.gba","displayName":"MSA","displayFileUrl":"https://assets.workinstore.org/roms/MSA.gba","downloadAttr":"download"},{"fullName":"QS.smd","displayName":"QS","displayFileUrl":"https://assets.workinstore.org/roms/QS.smd","downloadAttr":"download"},{"fullName":"SMAS.sfc","displayName":"SMAS","displayFileUrl":"https://assets.workinstore.org/roms/SMAS.sfc","downloadAttr":"download"},{"fullName":"SMB.nes","displayName":"SMB","displayFileUrl":"https://assets.workinstore.org/roms/SMB.nes","downloadAttr":"download"},{"fullName":"SMW.sfc","displayName":"SMW","displayFileUrl":"https://assets.workinstore.org/roms/SMW.sfc","downloadAttr":"download"},{"fullName":"SON.smd","displayName":"SON","displayFileUrl":"https://assets.workinstore.org/roms/SON.smd","downloadAttr":"download"},{"fullName":"SR.smd","displayName":"SR","displayFileUrl":"https://assets.workinstore.org/roms/SR.smd","downloadAttr":"download"},{"fullName":"SSFII.sfc","displayName":"SSFII","displayFileUrl":"https://assets.workinstore.org/roms/SSFII.sfc","downloadAttr":"download"},{"fullName":"TKFEX2.gba","displayName":"TKFEX2","displayFileUrl":"https://assets.workinstore.org/roms/TKFEX2.gba","downloadAttr":"download"},{"fullName":"TLK.sfc","displayName":"TLK","displayFileUrl":"https://assets.workinstore.org/roms/TLK.sfc","downloadAttr":"download"},{"fullName":"TLZ.sfc","displayName":"TLZ","displayFileUrl":"https://assets.workinstore.org/roms/TLZ.sfc","downloadAttr":"download"}];
+const itensPorPagina = 30;
+let paginaAtual = 1;
+let arquivosFiltrados = [...todosArquivos];
 
-    <script>
-        const data = [{"name":"AKEC","url":"https://assets.workinstore.org/roms/AKEC.smd"},{"name":"ALA","url":"https://assets.workinstore.org/roms/ALA.smd"},{"name":"ASSM","url":"https://assets.workinstore.org/roms/ASSM.smd"},{"name":"BOB","url":"https://assets.workinstore.org/roms/BOB.sfc"},{"name":"BOMB","url":"https://assets.workinstore.org/roms/BOMB.sfc"},{"name":"DBAA","url":"https://assets.workinstore.org/roms/DBAA.gba"},{"name":"DONK1","url":"https://assets.workinstore.org/roms/DONK1.sfc"},{"name":"MJM","url":"https://assets.workinstore.org/roms/MJM.smd"},{"name":"MLSS","url":"https://assets.workinstore.org/roms/MLSS.gba"},{"name":"MMPR","url":"https://assets.workinstore.org/roms/MMPR.sfc"},{"name":"MMPRM","url":"https://assets.workinstore.org/roms/MMPRM.sfc"},{"name":"MSA","url":"https://assets.workinstore.org/roms/MSA.gba"},{"name":"QS","url":"https://assets.workinstore.org/roms/QS.smd"},{"name":"SMAS","url":"https://assets.workinstore.org/roms/SMAS.sfc"},{"name":"SMB","url":"https://assets.workinstore.org/roms/SMB.nes"},{"name":"SMW","url":"https://assets.workinstore.org/roms/SMW.sfc"},{"name":"SON","url":"https://assets.workinstore.org/roms/SON.smd"},{"name":"SR","url":"https://assets.workinstore.org/roms/SR.smd"},{"name":"SSFII","url":"https://assets.workinstore.org/roms/SSFII.sfc"},{"name":"TKFEX2","url":"https://assets.workinstore.org/roms/TKFEX2.gba"},{"name":"TLK","url":"https://assets.workinstore.org/roms/TLK.sfc"},{"name":"TLZ","url":"https://assets.workinstore.org/roms/TLZ.sfc"}];
-        let page = 1; const perPage = 30;
-        
-        function render(filtered = data) {
-            const list = document.getElementById('list');
-            const pagDiv = document.getElementById('pagination');
-            
-            list.innerHTML = filtered.slice((page-1)*perPage, page*perPage).map(i => 
-                `<a href="${i.url}" download class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition text-gray-700 truncate block text-center font-medium">${i.name}</a>`
-            ).join('');
-            
-            const pages = Math.ceil(filtered.length/perPage);
-            pagDiv.innerHTML = Array.from({length: pages}, (_, i) => 
-                `<button onclick="page=${i+1}; render()" class="px-5 py-2 ${page === i+1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'} border rounded-lg shadow-sm font-semibold">${i+1}</button>`
-            ).join('');
+function renderizar() {
+    const lista = document.getElementById('fileList');
+    const paginacaoDiv = document.getElementById('pagination');
+    lista.innerHTML = '';
+
+    if (arquivosFiltrados.length === 0) {
+        lista.innerHTML = '<div class="no-results"><i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Nenhum arquivo encontrado.</div>';
+        paginacaoDiv.innerHTML = '';
+        return;
+    }
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const itensPagina = arquivosFiltrados.slice(inicio, fim);
+
+    itensPagina.forEach(arq => {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = `<a href="${arq.displayFileUrl}" ${arq.downloadAttr ? 'download="' + arq.fullName + '"' : 'target="_blank"'} class="file-link" title="${arq.displayName}">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>${arq.displayName}</span>
+        </a>`;
+        lista.appendChild(li);
+    });
+
+    renderizarPaginacao();
+}
+
+function renderizarPaginacao() {
+    const paginacaoDiv = document.getElementById('pagination');
+    paginacaoDiv.innerHTML = '';
+    const totalPaginas = Math.ceil(arquivosFiltrados.length / itensPorPagina);
+
+    if (totalPaginas <= 1) return;
+
+    // Botão Anterior
+    const btnAnterior = document.createElement('button');
+    btnAnterior.className = 'page-btn';
+    btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    btnAnterior.disabled = paginaAtual === 1;
+    btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
+    paginacaoDiv.appendChild(btnAnterior);
+
+    // Lógica de paginação compacta com reticências se houver muitas páginas
+    let paginasParaMostrar = [];
+    if (totalPaginas <= 10) {
+        for (let i = 1; i <= totalPaginas; i++) paginasParaMostrar.push(i);
+    } else {
+        paginasParaMostrar.push(1);
+        let inicioJanela = Math.max(2, paginaAtual - 2);
+        let fimJanela = Math.min(totalPaginas - 1, paginaAtual + 2);
+
+        if (paginaAtual <= 4) {
+            fimJanela = Math.min(totalPaginas - 1, 8);
         }
-        
-        function filter() {
-            const q = document.getElementById('search').value.toLowerCase();
-            page = 1; render(data.filter(i => i.name.toLowerCase().includes(q)));
+        if (paginaAtual >= totalPaginas - 3) {
+            inicioJanela = Math.max(2, totalPaginas - 7);
         }
-        render();
-    </script>
+
+        if (inicioJanela > 2) {
+            paginasParaMostrar.push('...');
+        }
+
+        for (let i = inicioJanela; i <= fimJanela; i++) {
+            paginasParaMostrar.push(i);
+        }
+
+        if (fimJanela < totalPaginas - 1) {
+            paginasParaMostrar.push('...');
+        }
+
+        paginasParaMostrar.push(totalPaginas);
+    }
+
+    paginasParaMostrar.forEach(p => {
+        if (p === '...') {
+            const span = document.createElement('span');
+            span.className = 'page-ellipsis';
+            span.innerText = '...';
+            paginacaoDiv.appendChild(span);
+        } else {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${p === paginaAtual ? 'active' : ''}`;
+            btn.innerText = p;
+            btn.onclick = () => { paginaAtual = p; renderizar(); };
+            paginacaoDiv.appendChild(btn);
+        }
+    });
+
+    // Botão Próximo
+    const btnProximo = document.createElement('button');
+    btnProximo.className = 'page-btn';
+    btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    btnProximo.disabled = paginaAtual === totalPaginas;
+    btnProximo.onclick = () => { if (paginaAtual < totalPaginas) { paginaAtual++; renderizar(); } };
+    paginacaoDiv.appendChild(btnProximo);
+}
+
+function filtrarEExibir() {
+    const termo = document.getElementById('searchInput').value.toLowerCase();
+    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    paginaAtual = 1;
+    renderizar();
+}
+
+renderizar();
+</script>
 </body>
 </html>
