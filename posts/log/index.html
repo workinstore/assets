@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador Automático de Catálogo de Arquivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        label span {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .preview-section {
+            border-top: 2px dashed var(--border);
+            padding-top: 2rem;
+            margin-top: 2rem;
+        }
+
+        .preview-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .catalog-container {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+        }
+
+        .file-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .file-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .file-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-link i {
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Gerador Automático de Catálogo</h1>
+        <p>Cole o link do repositório e gere seu index.html instantaneamente.</p>
+    </header>
+
+    <div class="card">
+        <div id="alertBox" class="alert"></div>
+        
+        <form id="generatorForm" onsubmit="event.preventDefault(); processarEGerar();">
+            <div class="form-group">
+                <label for="sourceUrl">Link de Origem (Repositório GitHub ou Pasta) <span>*</span></label>
+                <input type="text" id="sourceUrl" placeholder="Ex: https://github.com/usuario/repositorio/tree/main/diretorio" required>
+                <div class="helper-text">Insira o link normal da pasta no GitHub. O sistema extrairá os arquivos sozinho.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="customDomain">Link Base de Exibição <span>(Opcional)</span></label>
+                <input type="text" id="customDomain" placeholder="Ex: https://repositorio.meusite.org/diretorio">
+                <div class="helper-text">Se preenchido, os links do catálogo apontarão para o seu domínio próprio.</div>
+            </div>
+
+            <div class="form-group">
+                <label>Comportamento do Link</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="downloadMode" value="download" checked> Forçar Download
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="downloadMode" value="view"> Abrir / Visualizar no Navegador
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="btnGerar" class="btn">
+                <i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html
+            </button>
+        </form>
+    </div>
+
+    <div class="preview-section">
+        <div class="preview-title">
+            <i class="fa-solid fa-eye" style="color: var(--primary);"></i> Pré-visualização Automática
+        </div>
+        <div class="catalog-container" id="previewContainer">
+            <p style="color: var(--text-muted); text-align: center; padding: 1.5rem;">Insira o link acima para buscar os arquivos automaticamente.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function converterParaApiGithub(url) {
+    const regex = /github\.com\/([^\/]+)\/([^\/]+)\/(?:tree|blob)\/([^\/]+)\/(.+)?/;
+    const match = url.match(regex);
+    
+    if (match) {
+        const [, usuario, repo, branch, caminho = ''] = match;
+        return {
+            api: `https://api.github.com/repos/${usuario}/${repo}/contents/${caminho}?ref=${branch}`,
+            rawBase: `https://raw.githubusercontent.com/${usuario}/${repo}/${branch}/${caminho}`
+        };
+    }
+    return null;
+}
+
+async function buscarArquivosGitHub(inputUrl) {
+    const dadosRepo = converterParaApiGithub(inputUrl);
+    if (!dadosRepo) {
+        throw new Error('Formato de link do GitHub inválido. Certifique-se de colar o link completo da pasta.');
+    }
+
+    const response = await fetch(dadosRepo.api);
+    if (!response.ok) {
+        throw new Error('Não foi possível acessar a API do GitHub. Verifique se o repositório é público ou se o link está correto.');
+    }
+
+    const items = await response.json();
+    if (!Array.isArray(items)) {
+        throw new Error('O link informado aponta para um arquivo único e não para um diretório/pasta.');
+    }
+
+    const arquivos = items
+        .filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html')
+        .map(item => {
+            const fullName = item.name;
+            const lastDotIndex = fullName.lastIndexOf('.');
+            const displayName = lastDotIndex !== -1 ? fullName.substring(0, lastDotIndex) : fullName;
+            
+            return {
+                fullName: fullName,
+                displayName: displayName,
+                sourceFileUrl: item.download_url,
+                rawBase: dadosRepo.rawBase
+            };
+        });
+
+    return arquivos;
+}
+
+async function processarEGerar() {
+    const alertBox = document.getElementById('alertBox');
+    const btnGerar = document.getElementById('btnGerar');
+    alertBox.style.display = 'none';
+    btnGerar.disabled = true;
+    btnGerar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Lendo arquivos do repositório...';
+
+    try {
+        const sourceUrlInput = document.getElementById('sourceUrl').value.trim().replace(/\/+$/, '');
+        const arquivos = await buscarArquivosGitHub(sourceUrlInput);
+
+        if (arquivos.length === 0) {
+            throw new Error('Nenhum arquivo válido encontrado nesta pasta (ou apenas o index.html estava presente).');
+        }
+
+        let customDomain = document.getElementById('customDomain').value.trim().replace(/\/+$/, '');
+        const baseLink = customDomain !== '' ? customDomain : arquivos[0].rawBase;
+        const downloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+
+        const arquivosFormatados = arquivos.map(arq => ({
+            fullName: arq.fullName,
+            displayName: arq.displayName,
+            displayFileUrl: `${baseLink}/${encodeURIComponent(arq.fullName)}`,
+            downloadAttr: downloadMode === 'download' ? 'download' : ''
+        }));
+
+        atualizarPreview(arquivosFormatados);
+        gerarEBaixarArquivoHtml(arquivosFormatados);
+
+    } catch (error) {
+        alertBox.innerText = error.message;
+        alertBox.style.display = 'block';
+    } finally {
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = '<i class="fa-solid fa-bolt"></i> Varrer Pasta e Baixar index.html';
+    }
+}
+
+function atualizarPreview(arquivos) {
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = `
+        <div style="font-size: 0.85rem; color: #10b981; margin-bottom: 1rem; font-weight: 500;">
+            <i class="fa-solid fa-circle-check"></i> Sucesso! ${arquivos.length} arquivo(s) catalogado(s) automaticamente (index.html ignorado).
+        </div>
+        <ul class="file-list" style="max-height: 220px; overflow-y: auto;">
+            ${arquivos.map(a => `
+                <li class="file-item">
+                    <span class="file-link"><i class="fa-regular fa-file-lines"></i> ${a.displayName}</span>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
+function gerarEBaixarArquivoHtml(arquivos) {
+    const htmlTemplate = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Capas para Posts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 2rem 1rem; }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; }
+        header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+        header p { color: var(--text-muted); font-size: 0.9rem; }
+        .catalog-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .search-wrapper { position: relative; margin-bottom: 1.5rem; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-input { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .file-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; min-height: 200px; }
+        .file-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; transition: all 0.2s; }
+        .file-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-1px); }
+        .file-link { color: var(--text-main); text-decoration: none; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; width: 100%; word-break: break-all; }
+        .file-link i { color: var(--primary); font-size: 1.1rem; flex-shrink: 0; }
+        .pagination { display: flex; justify-content: center; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-main); transition: background 0.2s; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-ellipsis { padding: 0.4rem 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+        .no-results { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Catálogo de Capas para Posts</h1>
+        <p>Lista de capas disponíveis para postagem</p>
+    </header>
+    <div class="catalog-box">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar capas por código do jogo..." oninput="filtrarEExibir()">
+        </div>
+        <ul id="fileList" class="file-list"></ul>
+        <div id="pagination" class="pagination"></div>
+    </div>
+</div>
+<script>
+const todosArquivos = ${JSON.stringify(arquivos)};
+const itensPorPagina = 30;
+let paginaAtual = 1;
+let arquivosFiltrados = [...todosArquivos];
+
+function renderizar() {
+    const lista = document.getElementById('fileList');
+    const paginacaoDiv = document.getElementById('pagination');
+    lista.innerHTML = '';
+
+    if (arquivosFiltrados.length === 0) {
+        lista.innerHTML = '<div class="no-results"><i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>Nenhum arquivo encontrado.</div>';
+        paginacaoDiv.innerHTML = '';
+        return;
+    }
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const fim = inicio + itensPorPagina;
+    const itensPagina = arquivosFiltrados.slice(inicio, fim);
+
+    itensPagina.forEach(arq => {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = \`<a href="\${arq.displayFileUrl}" \${arq.downloadAttr ? 'download="' + arq.fullName + '"' : 'target="_blank"'} class="file-link" title="\${arq.displayName}">
+            <i class="fa-regular fa-file-lines"></i>
+            <span>\${arq.displayName}</span>
+        </a>\`;
+        lista.appendChild(li);
+    });
+
+    renderizarPaginacao();
+}
+
+function renderizarPaginacao() {
+    const paginacaoDiv = document.getElementById('pagination');
+    paginacaoDiv.innerHTML = '';
+    const totalPaginas = Math.ceil(arquivosFiltrados.length / itensPorPagina);
+
+    if (totalPaginas <= 1) return;
+
+    // Botão Anterior
+    const btnAnterior = document.createElement('button');
+    btnAnterior.className = 'page-btn';
+    btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+    btnAnterior.disabled = paginaAtual === 1;
+    btnAnterior.onclick = () => { if (paginaAtual > 1) { paginaAtual--; renderizar(); } };
+    paginacaoDiv.appendChild(btnAnterior);
+
+    // Lógica de paginação compacta com reticências se houver muitas páginas
+    let paginasParaMostrar = [];
+    if (totalPaginas <= 10) {
+        for (let i = 1; i <= totalPaginas; i++) paginasParaMostrar.push(i);
+    } else {
+        paginasParaMostrar.push(1);
+        let inicioJanela = Math.max(2, paginaAtual - 2);
+        let fimJanela = Math.min(totalPaginas - 1, paginaAtual + 2);
+
+        if (paginaAtual <= 4) {
+            fimJanela = Math.min(totalPaginas - 1, 8);
+        }
+        if (paginaAtual >= totalPaginas - 3) {
+            inicioJanela = Math.max(2, totalPaginas - 7);
+        }
+
+        if (inicioJanela > 2) {
+            paginasParaMostrar.push('...');
+        }
+
+        for (let i = inicioJanela; i <= fimJanela; i++) {
+            paginasParaMostrar.push(i);
+        }
+
+        if (fimJanela < totalPaginas - 1) {
+            paginasParaMostrar.push('...');
+        }
+
+        paginasParaMostrar.push(totalPaginas);
+    }
+
+    paginasParaMostrar.forEach(p => {
+        if (p === '...') {
+            const span = document.createElement('span');
+            span.className = 'page-ellipsis';
+            span.innerText = '...';
+            paginacaoDiv.appendChild(span);
+        } else {
+            const btn = document.createElement('button');
+            btn.className = \`page-btn \${p === paginaAtual ? 'active' : ''}\`;
+            btn.innerText = p;
+            btn.onclick = () => { paginaAtual = p; renderizar(); };
+            paginacaoDiv.appendChild(btn);
+        }
+    });
+
+    // Botão Próximo
+    const btnProximo = document.createElement('button');
+    btnProximo.className = 'page-btn';
+    btnProximo.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+    btnProximo.disabled = paginaAtual === totalPaginas;
+    btnProximo.onclick = () => { if (paginaAtual < totalPaginas) { paginaAtual++; renderizar(); } };
+    paginacaoDiv.appendChild(btnProximo);
+}
+
+function filtrarEExibir() {
+    const termo = document.getElementById('searchInput').value.toLowerCase();
+    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    paginaAtual = 1;
+    renderizar();
+}
+
+renderizar();
+<\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlTemplate], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
