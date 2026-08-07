@@ -121,7 +121,7 @@ function renderizarPaginacao() {
 
 function filtrarEExibir() {
     const termo = document.getElementById('searchInput').value.toLowerCase();
-    arquivosFiltrਣdos = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
+    arquivosFiltrados = todosArquivos.filter(arq => arq.displayName.toLowerCase().includes(termo));
     paginaAtual = 1;
     renderizar();
 }
